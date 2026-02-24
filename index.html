@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Improving Voice Conversion</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    h1, h2 {
+      text-align: left;
+    }
+    .authors {
+      margin-top: 10px;
+      font-size: 1rem;
+    }
+    .affiliations {
+      margin-top: 5px;
+      font-size: 0.9rem;
+      color: #555;   /* subtle gray for secondary text */
+    }
+    .affiliations sup {
+      margin-right: 4px;
+    }
+    .audio-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .audio-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 15px;
+      align-items: center;
+    }
+    .audio-row2 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      align-items: center;
+    }
+    .audio-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border: 1px solid #ddd;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+    .audio-cell strong {
+      margin-bottom: 10px;
+      font-weight: normal;
+    }
+    .audio-cell audio {
+      width: 100%;
+    }
+    @media (max-width: 900px) {
+      .audio-row {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+  </style>
+</head>
+<body>
+  <div id="content">
+        <h1>Improving Model Expressivity and Speaker Matching in Low-Latency Voice Conversion Models<small> <a href="" target="_blank">[paper (pending)]</a> <a href="" target="_blank">[code (pending)]</a></small></h1>        
+        <h2>Interspeech 2026 (Submission)</h2>
+
+        <!--
+        <div class="authors">
+        Anders R. Bargum<sup>1,2</sup>, Simon Lajboschitz<sup>2</sup>, Stefania Serafin<sup>1</sup> and Cumhur Erkut<sup>1</sup>
+        </div>
+
+        <div class="affiliations">
+          <div><sup>1</sup> Aalborg University, Denmark</div>
+          <div><sup>2</sup> Khora & Heka VR, Denmark</div>
+        </div>
+        -->
+
+        <h3 id="abstract">Abstract</h3>
+
+        <p>Real-time voice conversion systems struggle to achieve high speaker similarity in zero-shot scenarios, especially under lightweight computational constraints.
+          This challenge stems from lack in model expressivity and the difficulty of capturing comprehensive speaker-relevant information within the strict latency and model size requirements.
+          We propose a real-time voice conversion framework that addresses this limitation by fusing complementary information into conventional global speaker embeddings.
+          To ensure robust feature disentanglement, we furthermore employ an encoder-specific information perturbation strategy during training.
+          Our approach maintains causal inference requirements and preserves prosodic and linguistic content while operating under low-latency constraints.
+          Experimental evaluations demonstrate improvements speaker-matching metrics over to state-of-the-art real-time baselines.
+        <br>
+        <img src="overall_pipeline.png" alt="Pipeline Diagram" style="max-width:100%; height:auto; display:block; margin:20px auto;">
+        <br>
+  </div>
+  <h1>Audio Comparison</h1>
+
+  <!-- Table Header -->
+  <div class="audio-row">
+    <div class="audio-cell"><strong>Source (Unseen)</strong></div>
+    <div class="audio-cell"><strong>Target (Unseen)</strong></div>
+    <div class="audio-cell"><strong>RT-VC</strong></div>
+    <div class="audio-cell"><strong>StreamVC</strong></div>
+    <div class="audio-cell"><strong>Proposed</strong></div>
+  </div>
+
+  <div class="audio-row">
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/1_to_p362/source.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/1_to_p362/target.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/1_to_p362/rt-vc.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/1_to_p362/streamvc.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/1_to_p362/proposed.wav" type="audio/wav">
+      </audio>
+    </div>
+  </div>
+
+  <div class="audio-row">
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/2_to_p231/source.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/2_to_p231/target.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/2_to_p231/rt-vc.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/2_to_p231/streamvc.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/2_to_p231/proposed.wav" type="audio/wav">
+      </audio>
+    </div>
+  </div>
+
+  <div class="audio-row">
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/2_to_p360/source.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/2_to_p360/target.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/2_to_p360/rt-vc.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/2_to_p360/streamvc.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/2_to_p360/proposed.wav" type="audio/wav">
+      </audio>
+    </div>
+  </div>
+
+  <div class="audio-row">
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/2_to_p362/source.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/2_to_p362/target.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/2_to_p362/rt-vc.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/2_to_p362/streamvc.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/2_to_p362/proposed.wav" type="audio/wav">
+      </audio>
+    </div>
+  </div>
+
+  <div class="audio-row">
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/3_to_p231/source.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/3_to_p231/target.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/3_to_p231/rt-vc.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/3_to_p231/streamvc.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/3_to_p231/proposed.wav" type="audio/wav">
+      </audio>
+    </div>
+  </div>
+
+  <div class="audio-row">
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/1_to_p334/source.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/1_to_p334/target.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/1_to_p334/rt-vc.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/1_to_p334/streamvc.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/1_to_p334/proposed.wav" type="audio/wav">
+      </audio>
+    </div>
+  </div>
+
+  <div class="audio-row">
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/3_to_p360/source.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/3_to_p360/target.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/3_to_p360/rt-vc.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/3_to_p360/streamvc.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/3_to_p360/proposed.wav" type="audio/wav">
+      </audio>
+    </div>
+  </div>
+
+  <div class="audio-row">
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/5_to_p334/source.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/5_to_p334/target.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/5_to_p334/rt-vc.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/5_to_p334/streamvc.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/5_to_p334/proposed.wav" type="audio/wav">
+      </audio>
+    </div>
+  </div>
+  
+  <br>
+  
+  <h1>Extra: Singing Voice and Multilingual Conversion</h1>
+
+  <!-- Table Header -->
+  <div class="audio-row2">
+    <div class="audio-cell"><strong>Source</strong></div>
+    <div class="audio-cell"><strong>Target</strong></div>
+    <div class="audio-cell"><strong>Proposed</strong></div>
+  </div>
+
+  <div class="audio-row2">
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/extra/source_sing1.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/extra/target_sing1.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/extra/convert_sing1.wav" type="audio/wav">
+      </audio>
+    </div>
+  </div>
+
+  <div class="audio-row2">
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/extra/source_sing2.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/extra/target_sing2.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/extra/convert_sing2.wav" type="audio/wav">
+      </audio>
+    </div>
+  </div>
+
+  <div class="audio-row2">
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/extra/source_german.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/extra/target_german.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/extra/convert_german.wav" type="audio/wav">
+      </audio>
+    </div>
+  </div>
+
+  <div class="audio-row2">
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/extra/source_spanish.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/extra/target_spanish.wav" type="audio/wav">
+      </audio>
+    </div>
+    <div class="audio-cell">
+      <audio controls>
+        <source src="audio/extra/convert_spanish.wav" type="audio/wav">
+      </audio>
+    </div>
+  </div>
+  
+  <br>
+
+  <br>
+
+  <h3>Video Demonstration</h3>
+  <p>
+    The following video shows the real-time voice conversion framework in action,
+    demonstrating speaker matching and latency performance.
+  </p>
+  
+  <div style="margin: 30px 0;">
+    <video 
+      controls 
+      style="width:100%; max-width:100%; display:block;"
+      preload="metadata">
+      <source src="https://raw.githubusercontent.com/lightweight-rt-vc/lightweight-rt-vc.github.io/main/demo.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+  </div>
+  
+  <script src="https://player.vimeo.com/api/player.js"></script>
+  
+  <br>
+
+  
+  <h4 id="ethics">Ethics Statement</h4>
+
+        <p>The ethical considerations associated with real-time voice conversion stem from broader concerns surrounding voice conversion and generative speech technologies,
+          particularly their potential to enable impersonation and infringe on individual privacy. To address these risks, training scripts and general source code will not be released as open source.
+          Rather we provide a Torchscript export, a conversion demonstration script and evaluation scripts for reproducibility. We do not condone or accept any misuse of VC technology.
+          The present research is conducted to advance the state of the art and contribute new knowledge to the field.</p>
+
+  <!-- Add more rows as needed -->
+</body>
+</html>
